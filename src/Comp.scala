@@ -2,7 +2,7 @@ import scala.io.Source
 
 object Comp {
   
-	val TEST_FILE = "/home/minerva/code/scala/Comp/src/ramIn"
+	val TEST_FILE = "/home/minerva/code/scala/Comp/src/dBin" //ramIn"
 	val DEBUG = false
 	  
 	val ramValues = readRamFromFile(TEST_FILE)
@@ -19,14 +19,16 @@ object Comp {
 		def get(adr: Array[Boolean]): Array[Boolean] = {
 			if (getInt(adr) < 15)
 				state(getInt(adr))
-			else 
+			else {
+				print("ERROR 01")
 				exit(1)
+			}
 		}
 		def set(adr: Array[Boolean], data: Array[Boolean]) {
 			if (getInt(adr) != 15)
 				state(getInt(adr)) = data
 			else 
-				println(getString(data))
+				println(getString(data) + " " + getInt(data))
 		}
 		def getStr() = getString(state)				
 	}
@@ -59,15 +61,25 @@ object Comp {
 			reg = ram.get(getSecondNibble(reg))
 			pc = getBoolNib(getInt(pc)+1)
 		}
-		def jumpIfZero(adr: Array[Boolean]) {
-			if (getInt(reg) == 0)
+		def jumpIf(adr: Array[Boolean]) {
+			if (getInt(reg) >= 127)
+				pc = adr
+			else
+				pc = getBoolNib(getInt(pc)+1)
+		}
+		def jumpIfSmaller(adr: Array[Boolean]) {
+			if (getInt(reg) < 127)
 				pc = adr
 			else
 				pc = getBoolNib(getInt(pc)+1)
 		}
 	
 		def exec() {
-			if (getInt(pc) >= 15) exit(0)
+			if (getInt(pc) >= 15) {
+			  if (DEBUG == true)
+			    print("QUIT")
+			  exit(0)
+			}
 			if (DEBUG) {
 			  println("RAM: " + ram.getStr)
 			  println("CPU: " + this.getStr)
@@ -87,7 +99,8 @@ object Comp {
 				case 3 => subtract(adr)
 				case 4 => jump(adr)
 				case 5 => readPointer(adr)
-				case 6 => jumpIfZero(adr)
+				case 6 => jumpIf(adr)
+				case 7 => jumpIfSmaller(adr)
 			}
 			exec()
 		}
@@ -118,7 +131,7 @@ object Comp {
 	}
 	
 	def getInt(bIn: Array[Boolean]): Int = {
-		val bbb = bIn.reverse //TODO
+		val bbb = bIn.reverse
 		var sum: Int = 0;
 		var i = 0;
 		for (b <- bbb) {
@@ -160,7 +173,7 @@ object Comp {
 			else if (c == '*')	
 				out(i) = true
 			else {
-				print("Input Error - Unrecognized char")
+				print("Input Error 02 - Unrecognized char")
 				exit(2)
 			}	
 			i = i+1
@@ -169,26 +182,35 @@ object Comp {
 	}
 	
 	def getBool(numIn: Int): Array[Boolean] = {
-		if (numIn > 255) exit(3)
+		if (numIn > 255) {
+			print("ERROR 03")
+			exit(3)
+		}
 		var num = numIn
+		//if (num < 0) 
+		//  num = 0
 		val out = new Array[Boolean](8)
 		var j = 0
-		for (i <- 7 to 0) {
-			val rez = num / Math.pow(2, i)
+		for (i <- 0 to 7 reverse) {
+			val delitelj: Int = Math.pow(2, i).asInstanceOf[Int]
+			val rez = num / delitelj
 			if ( rez > 0 ) {
 				out(j) = true
 			}
 			else {
 				out(j) = false
 			}
-			num = num % Math.pow(2, i).asInstanceOf[Int]
+			num = num % delitelj
 			j = j+1
 		}
 		out
 	}
 	
 	def getBoolNib(numIn: Int): Array[Boolean] = {
-		if (numIn > 15) exit(3)
+		if (numIn > 15) { 
+			print("ERROR 01")
+			exit(4)
+		}
 		var num = numIn
 		val out = new Array[Boolean](4)
 		var j = 0
