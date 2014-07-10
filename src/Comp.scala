@@ -2,7 +2,7 @@ import scala.io.Source
 
 object Comp {
   
-	val TEST_FILE = "/home/minerva/code/scala/Comp/src/dBin" //ramIn"
+	val TEST_FILE = "/home/jure/code/scala/Comp/src/cBin" //ramIn"
 	val DEBUG = false
 	  
 	val ramValues = readRamFromFile(TEST_FILE)
