@@ -1,4 +1,5 @@
 import scala.io.Source
+import sys.exit
 
 object AssemblyCompiler {
     

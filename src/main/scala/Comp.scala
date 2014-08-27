@@ -1,8 +1,9 @@
 import scala.io.Source
+import sys.exit
 
 object Comp {
   
-	val TEST_FILE = "/home/jure/code/scala/Comp/src/cBin" //ramIn"
+	val TEST_FILE = "/home/minerva/code/scala/comp/src/main/scala/cBin" //ramIn"
 	val DEBUG = false
 	  
 	val ramValues = readRamFromFile(TEST_FILE)
