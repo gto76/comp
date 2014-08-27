@@ -1,4 +1,4 @@
 comp
 ====
 
-Simple virtual computer with assembly compiler.
+Simple virtual computer with assembler.
