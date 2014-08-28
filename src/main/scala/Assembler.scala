@@ -1,7 +1,7 @@
 import scala.io.Source
 import sys.exit
 
-object AssemblyCompiler {
+object Assembler {
     
     val MEMORY_LENGTH = 15
     val MEMORY_WIDTH = 8

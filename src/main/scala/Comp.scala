@@ -3,15 +3,26 @@ import sys.exit
 
 object Comp {
   
-	val TEST_FILE = "/home/minerva/code/scala/comp/src/main/scala/cBin" //ramIn"
+	val TEST_FILE = "cBin"
+  //ramIn"
 	val DEBUG = false
-	  
-	val ramValues = readRamFromFile(TEST_FILE)
-  	val ram = new Ram(ramValues)
-  	val proc = new Proc()
+
+  //only class can have undefined values, so I defined them, although they are reset in main.
+  var ramValues = readRamFromFile(TEST_FILE)
+  var ram = new Ram(ramValues)
+  var proc = new Proc()
 	
 	def main(args: Array[String]): Unit = {
-	  	proc.exec()
+    val cmd = Cli.getCommandLine(args)
+    val help = cmd.hasOption("h")
+    val input = if (cmd.hasOption("f")) cmd.getOptionValue("f") else TEST_FILE // TODO: absolute filenames need different method
+    if (help) { Cli.printHelp; return }
+
+    ramValues = readRamFromFile(input)
+    ram = new Ram(ramValues)
+    proc = new Proc()
+
+    proc.exec()
 	}
 		
 	// adr 15 is io
@@ -77,7 +88,7 @@ object Comp {
 	
 		def exec() {
 			if (getInt(pc) >= 15) {
-			  if (DEBUG == true)
+			  if (DEBUG)
 			    print("QUIT")
 			  exit(0)
 			}
@@ -115,8 +126,7 @@ object Comp {
 	 * UTILS:
 	 */
 	def readRamFromFile(filename: String): Array[Array[Boolean]] = {
-		val source = scala.io.Source.fromFile(filename)
-		//val lines = source.mkString
+    val source = Source.fromURL(getClass.getResource(filename))
 				
 		var data = new Array[Array[Boolean]](15) //(15, 8)
 		var i = 0
