@@ -18,7 +18,7 @@ object Cli {
   private def getOptions: Options = {
     val options = new Options()
     options.addOption("h", "help", false, "Print this message.")
-    addOptionWithArg(options, 'f', "filename", "Specify filename containing initial state of the ram.")
+    //addOptionWithArg(options, 'f', "filename", "Specify filename containing initial state of the ram.")
     options
   }
 

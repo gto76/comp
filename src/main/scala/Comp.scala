@@ -15,10 +15,13 @@ object Comp {
 	def main(args: Array[String]): Unit = {
     val cmd = Cli.getCommandLine(args)
     val help = cmd.hasOption("h")
-    val input = if (cmd.hasOption("f")) cmd.getOptionValue("f") else TEST_FILE // TODO: absolute filenames need different method
+    //val input = if (cmd.hasOption("f")) cmd.getOptionValue("f") else TEST_FILE // TODO: absolute filenames need different method
     if (help) { Cli.printHelp; return }
 
-    ramValues = readRamFromFile(input)
+    val arguments = cmd.getArgs()
+    val file: String = if (arguments.length > 0) TEST_FILE else arguments(0)
+
+    ramValues = readRamFromFile(file)
     ram = new Ram(ramValues)
     proc = new Proc()
 
