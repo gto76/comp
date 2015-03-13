@@ -19,7 +19,7 @@ object Comp {
     if (help) { Cli.printHelp; return }
 
     val arguments = cmd.getArgs()
-    val file: String = if (arguments.length > 0) TEST_FILE else arguments(0)
+    val file: String = if (arguments.length > 0) arguments(0) else TEST_FILE
 
     ramValues = readRamFromFile(file)
     ram = new Ram(ramValues)
