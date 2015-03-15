@@ -3,7 +3,7 @@ import sys.exit
 
 object Comp {
   
-	val TEST_FILE = "cBin"
+	val TEST_FILE = "data/fibbBin"
   //ramIn"
 	val DEBUG = false
 

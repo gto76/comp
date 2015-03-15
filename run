@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+# Usage: ./run 
+# Compiles and runs the project. 
+
+set -e
+
+mkdir -p bin/data 
+mkdir -p bin/lib 
+scalac -d bin -classpath lib/commons-cli-1.2.jar src/main/scala/*
+cp lib/commons-cli-1.2.jar bin/lib 
+cp data/fibbBin bin/data
+
+cd bin
+scala -classpath lib/commons-cli-1.2.jar:. Comp
+
