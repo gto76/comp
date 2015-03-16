@@ -148,11 +148,12 @@ object Comp {
 				// byte of ram
 				print(ramLines(i))
 				// bytes address
-				if (i < 10) 
-					print("  ")
-				else
-					print(" ")
-				print(i)
+				print(" "+getString(getSecondNibble(getBool(i))))
+				//if (i < 10) 
+				//	print("  ")
+				//else
+				//	print(" ")
+				//print(i)
 				print(verSeparator)
 				if (i < outputLines.length)
 					print(outputLines(i))
