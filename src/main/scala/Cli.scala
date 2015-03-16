@@ -36,7 +36,7 @@ object Cli {
 
   def printHelp() {
     val formatter = new HelpFormatter()
-    formatter.printHelp("wolfram-cells", Cli.getOptions)
+    formatter.printHelp("comp", Cli.getOptions)
   }
 
 }

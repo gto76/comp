@@ -5,34 +5,38 @@ object Comp {
   
 	val TEST_FILE = "data/fibbBin"
   //ramIn"
-	val DEBUG = false
+	val DEBUG = true
+	
+	val RAM_SIZE = 15
 
   //only class can have undefined values, so I defined them, although they are reset in main.
-  var ramValues = readRamFromFile(TEST_FILE)
-  var ram = new Ram(ramValues)
-  var proc = new Proc()
+	var ramValues = readRamFromFile(TEST_FILE)
+	var ram = new Ram(ramValues)
+	var proc = new Proc()
+
+	var output = ""
 	
 	def main(args: Array[String]): Unit = {
-    val cmd = Cli.getCommandLine(args)
-    val help = cmd.hasOption("h")
-    //val input = if (cmd.hasOption("f")) cmd.getOptionValue("f") else TEST_FILE // TODO: absolute filenames need different method
-    if (help) { Cli.printHelp; return }
+		val cmd = Cli.getCommandLine(args)
+		val help = cmd.hasOption("h")
+		//val input = if (cmd.hasOption("f")) cmd.getOptionValue("f") else TEST_FILE // TODO: absolute filenames need different method
+		if (help) { Cli.printHelp; return }
 
-    val arguments = cmd.getArgs()
-    val file: String = if (arguments.length > 0) arguments(0) else TEST_FILE
+		val arguments = cmd.getArgs()
+		val file: String = if (arguments.length > 0) arguments(0) else TEST_FILE
 
-    ramValues = readRamFromFile(file)
-    ram = new Ram(ramValues)
-    proc = new Proc()
+		ramValues = readRamFromFile(file)
+		ram = new Ram(ramValues)
+		proc = new Proc()
 
-    proc.exec()
+		proc.exec()
 	}
 		
 	// adr 15 is io
 	// val names: Array[Array[String]] = new Array[Array[String]](10, 10)
-	class Ram(var state: Array[Array[Boolean]]/* Boolean[15][8]*/) {
+	class Ram(var state: Array[Array[Boolean]]/* Boolean[RAM_SIZE][8]*/) {
 		def get(adr: Array[Boolean]): Array[Boolean] = {
-			if (getInt(adr) < 15)
+			if (getInt(adr) < RAM_SIZE)
 				state(getInt(adr))
 			else {
 				print("ERROR 01")
@@ -40,10 +44,15 @@ object Comp {
 			}
 		}
 		def set(adr: Array[Boolean], data: Array[Boolean]) {
-			if (getInt(adr) != 15)
+			if (getInt(adr) != RAM_SIZE)
 				state(getInt(adr)) = data
-			else 
-				println(getString(data) + " " + getInt(data))
+			else {
+				val outputLine = getString(data) + " " + getInt(data) + "\n"
+				output = output + outputLine
+				if (!DEBUG) {
+					println(outputLine)
+				}
+			}
 		}
 		def getStr() = getString(state)				
 	}
@@ -90,24 +99,19 @@ object Comp {
 		}
 	
 		def exec() {
-			if (getInt(pc) >= 15) {
+			if (getInt(pc) >= RAM_SIZE) {
 			  if (DEBUG)
 			    print("QUIT")
 			  exit(0)
 			}
-			if (DEBUG) {
-			  println("RAM: " + ram.getStr)
-			  println("CPU: " + this.getStr)
-			}
 			val tmp = ram.get(pc)
-			val ukaz = getFirstNibble(tmp)
+			val inst = getFirstNibble(tmp)
 			val adr = getSecondNibble(tmp)
 			if (DEBUG) {
-			  println("tmp: "+getString(tmp))
-			  println("ukaz: "+getString(ukaz) + " int: " + getInt(ukaz))
-			  println("adr: "+getString(adr)+ " int: " + getInt(adr))
+				printState(inst, adr)
+				readLine()
 			}
-			getInt(ukaz) match {
+			getInt(inst) match {
 				case 0 => read(adr)
 				case 1 => write(adr)
 				case 2 => add(adr)
@@ -118,28 +122,66 @@ object Comp {
 				case 7 => jumpIfSmaller(adr)
 			}
 			exec()
-		}
-		
+		}		
 		def getStr() = {
 		  "Reg: " + getString(reg) + " Pc: " + getString(pc)
 		}
+		
+		def printState(inst: Array[Boolean], adr: Array[Boolean]) = {
+			val verSeparator = "                  "
+			println("    RAM:       "+verSeparator+"OUTPUT:")
+			//		 -> ----***-  0            ---**-*- 123
+
+			val ramLines = ram.getStr.split("\n")
+			var outputLines = output.split("\n")
+			if (outputLines.length > RAM_SIZE)
+				outputLines = outputLines.drop(RAM_SIZE - outputLines.length) // TODO check if correct 
+			val pcInt = getInt(pc)
+			
+			// RAM and OUTPUT
+			for (i <- 0 to RAM_SIZE-1) {
+				// arrow to what pc points to
+				if (pcInt == i) 
+					print(" -> ")
+				else
+					print("    ")
+				// byte of ram
+				print(ramLines(i))
+				// bytes address
+				if (i < 10) 
+					print("  ")
+				else
+					print(" ")
+				print(i)
+				print(verSeparator)
+				if (i < outputLines.length)
+					print(outputLines(i))
+				println()
+			}
+			
+			//println("RAM: " + ram.getStr)
+
+			// CPU
+			println("CPU:")
+			println("Reg " + getString(reg) +" "+ getInt(reg))
+			println("Ins "+getString(inst)+getString(adr)+" "+ getInstructionName(inst)+" "+ getInt(adr))
+		}
 	}
+	
+
 	
 	/*
 	 * UTILS:
 	 */
 	def readRamFromFile(filename: String): Array[Array[Boolean]] = {
-    val source = Source.fromURL(getClass.getResource(filename))
+    	val source = Source.fromURL(getClass.getResource(filename))
 				
-		var data = new Array[Array[Boolean]](15) //(15, 8)
+		var data = new Array[Array[Boolean]](RAM_SIZE) //(RAM_SIZE, 8)
 		var i = 0
-		for(line <- source.getLines()) {
+		for (line <- source.getLines()) {
 	  		data(i) = getBool(line)
 	  		i = i+1
 	  	}
-		if (DEBUG) {
-		  print("RAM INIT: " + getString(data))
-		}
 		source.close()
 	  	data
 	}
@@ -161,9 +203,9 @@ object Comp {
 	def getString(bbb: Array[Array[Boolean]]): String = {
 		var sss = ""
 		for (b <- bbb) {
-		  sss = sss + "\n" + getString(b)
+			sss = sss + "\n" + getString(b)
 		}
-		sss
+		sss.drop(1)
 	}
 	
 	def getString(bbb: Array[Boolean]): String = {
@@ -176,6 +218,19 @@ object Comp {
 				s = s + "-"
 		}
 		s
+	}
+	
+	def getInstructionName(inst: Array[Boolean]): String = {
+		getInt(inst) match {
+			case 0 => "READ"
+			case 1 => "WRITE"
+			case 2 => "ADD"
+			case 3 => "SUBTRACT"
+			case 4 => "JUMP"
+			case 5 => "POINT"
+			case 6 => "BIGGER"
+			case 7 => "SMALLER"
+		}
 	}
 	
 	def getBool(str: String): Array[Boolean] = {
@@ -221,7 +276,7 @@ object Comp {
 	}
 	
 	def getBoolNib(numIn: Int): Array[Boolean] = {
-		if (numIn > 15) { 
+		if (numIn > RAM_SIZE) { 
 			print("ERROR 01")
 			exit(4)
 		}
