@@ -4,7 +4,10 @@ import sys.exit
 object Comp {
   
 	val TEST_FILE = "data/fibbBin"
-  //ramIn"
+	val DRAWING_FILE = "data/template8"
+	
+	val DRAWING = Source.fromURL(getClass.getResource(DRAWING_FILE))
+
 	val DEBUG = true
 	
 	val RAM_SIZE = 15
@@ -108,7 +111,8 @@ object Comp {
 			val inst = getFirstNibble(tmp)
 			val adr = getSecondNibble(tmp)
 			if (DEBUG) {
-				printState(inst, adr)
+				val out = renderState(inst, adr)
+				println(out)
 				readLine()
 			}
 			getInt(inst) match {
@@ -127,15 +131,69 @@ object Comp {
 		  "Reg: " + getString(reg) + " Pc: " + getString(pc)
 		}
 		
-		def printState(inst: Array[Boolean], adr: Array[Boolean]) = {
-			val verSeparator = "                  "
-			println("    RAM:       "+verSeparator+"OUTPUT:")
-			//		 -> ----***-  0            ---**-*- 123
-
-			val ramLines = ram.getStr.split("\n")
+		
+		def getPrinterOutput() = {
+			// MODIFY
 			var outputLines = output.split("\n")
 			if (outputLines.length > RAM_SIZE)
-				outputLines = outputLines.drop(RAM_SIZE - outputLines.length) // TODO check if correct 
+				outputLines = outputLines.drop(RAM_SIZE - outputLines.length)
+		}
+		
+		def insertActualValues(line: String, switchIndex: Map[String,Int], printerOutput: String) = {
+			val sb = new StringBuilder()
+			for (c <- line) {
+				if (!c.contains("[0-9a-z]".r) {
+					sb.append(c)
+				} else {
+					val substituteChar = substitute(c, switchIndex)
+					sb.append(substituteChar)
+				}
+			}
+		}
+		
+		def substitute(c: Char, switchIndex: Map[String,Int]): Char = {
+			val i = if (switchIndex.contains(c)) {
+					val i = switchIndex.get(c)
+					switchIndex.put(c,i+1)
+					i
+				} else {
+					switchIndex.put(c,1)
+					0
+				}
+				
+			c match {
+				case 'p' => getChar(pc(i))
+				case 's' => getChar(getSecondNibble(ram.get(pc))(i))
+				case 'r' => getChar(reg(i))
+				case 'i' => getChar(getFirstNibble(ram.get(pc))(i))
+				case 'o' => getOutput(i)
+				case [0-9a-e].r => getRam(c, i)
+			}
+		}
+		
+		//TODO
+		def getOutput(i: Int) = {
+		}
+		
+		def getRam(c: Char, i: Int) = {
+			val j = hexToInt(c)
+			val ramLines = ram.getStr.split("\n")
+			ramLines(j)(i)
+		}
+
+		
+		def renderState(inst: Array[Boolean], adr: Array[Boolean]) = {
+			val sb = new StringBuilder()
+			val printerOutput = getPrinterOutput()
+			val switchIndex = new Map(String, Int)()
+			
+			for (line <- DRAWING.lines()) {
+				val processedLine = insertActualValues(line, switchIndex)
+				sb.append(processedLine)			
+			}
+		
+		
+			val ramLines = ram.getStr.split("\n")
 			val pcInt = getInt(pc)
 			
 			// RAM and OUTPUT
@@ -232,6 +290,13 @@ object Comp {
 			case 6 => "BIGGER"
 			case 7 => "SMALLER"
 		}
+	}
+	
+	def getChar(b: Boolean) = {
+		if (b) 
+			'*'
+		else
+			'-'
 	}
 	
 	def getBool(str: String): Array[Boolean] = {
