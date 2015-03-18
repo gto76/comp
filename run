@@ -9,7 +9,7 @@ mkdir -p bin/data
 mkdir -p bin/lib 
 scalac -d bin -classpath lib/commons-cli-1.2.jar src/main/scala/*
 cp lib/* bin/lib 
-cp data/fibbBin bin/data
+cp data/* bin/data
 
 cd bin
 scala -classpath lib/commons-cli-1.2.jar:. Comp

@@ -1,10 +1,11 @@
 import scala.io.Source
+import scala.collection.mutable.Map 
 import sys.exit
 
 object Comp {
   
 	val TEST_FILE = "data/fibbBin"
-	val DRAWING_FILE = "data/template8"
+	val DRAWING_FILE = "data/asciiDrawingOfComputer"
 	
 	val DRAWING = Source.fromURL(getClass.getResource(DRAWING_FILE))
 
@@ -22,7 +23,8 @@ object Comp {
 	def main(args: Array[String]): Unit = {
 		val cmd = Cli.getCommandLine(args)
 		val help = cmd.hasOption("h")
-		//val input = if (cmd.hasOption("f")) cmd.getOptionValue("f") else TEST_FILE // TODO: absolute filenames need different method
+		//val input = if (cmd.hasOption("f")) cmd.getOptionValue("f") else TEST_FILE 
+    // TODO: absolute filenames need different method
 		if (help) { Cli.printHelp; return }
 
 		val arguments = cmd.getArgs()
@@ -60,10 +62,11 @@ object Comp {
 		def getStr() = getString(state)				
 	}
 	
-	// TODO unmutable
 	class Proc {
 		var reg = Array( false, false, false, false, false, false, false, false )
 		var pc = Array( false, false, false, false )
+    
+    var printerOutput = ""
 	
 		def read(adr: Array[Boolean]) {
 			reg = ram.get(adr)
@@ -127,52 +130,62 @@ object Comp {
 			}
 			exec()
 		}		
+    
 		def getStr() = {
 		  "Reg: " + getString(reg) + " Pc: " + getString(pc)
 		}
 		
-		
-		def getPrinterOutput() = {
-			// MODIFY
+		// TODO
+		def setPrinterOutput() = {
+      /*
 			var outputLines = output.split("\n")
 			if (outputLines.length > RAM_SIZE)
 				outputLines = outputLines.drop(RAM_SIZE - outputLines.length)
+      printerOutput = outputLines.toString()
+      */
+      printerOutput = "bla bla"
+      
 		}
 		
-		def insertActualValues(line: String, switchIndex: Map[String,Int], printerOutput: String) = {
+		def insertActualValues(line: String, switchIndex: Map[Char,Int]) = {
 			val sb = new StringBuilder()
 			for (c <- line) {
-				if (!c.contains("[0-9a-z]".r) {
-					sb.append(c)
-				} else {
-					val substituteChar = substitute(c, switchIndex)
-					sb.append(substituteChar)
-				}
+        val cOut = if ("[0-9a-z]".r.findAllIn(c.toString).length != 1) {
+          c
+        } else {
+          getLightbulb(c, switchIndex)
+        }
+        sb.append(cOut)
 			}
 		}
 		
-		def substitute(c: Char, switchIndex: Map[String,Int]): Char = {
+		def getLightbulb(c: Char, switchIndex: Map[Char,Int]): Char = {
 			val i = if (switchIndex.contains(c)) {
-					val i = switchIndex.get(c)
-					switchIndex.put(c,i+1)
+					val i = switchIndex.get(c).get
+					switchIndex.put(c, i+1)
 					i
 				} else {
-					switchIndex.put(c,1)
+					switchIndex.put(c, 1)
 					0
 				}
-				
-			c match {
-				case 'p' => getChar(pc(i))
-				case 's' => getChar(getSecondNibble(ram.get(pc))(i))
-				case 'r' => getChar(reg(i))
-				case 'i' => getChar(getFirstNibble(ram.get(pc))(i))
-				case 'o' => getOutput(i)
-				case [0-9a-e].r => getRam(c, i)
+			
+      val patRam = "[0-9a-e]".r	
+			c.toString() match {
+				case "p" => getChar(pc(i)) // need to convert 
+				case "s" => getChar(getSecondNibble(ram.get(pc))(i))
+				case "r" => getChar(reg(i))
+				case "i" => getChar(getFirstNibble(ram.get(pc))(i))
+				case "o" => getOutput(i)
+				case patRam => getRam(c, i)
 			}
 		}
 		
 		//TODO
 		def getOutput(i: Int) = {
+      if (printerOutput.length <= i)
+        ' '
+      else
+        printerOutput.charAt(i)
 		}
 		
 		def getRam(c: Char, i: Int) = {
@@ -180,21 +193,23 @@ object Comp {
 			val ramLines = ram.getStr.split("\n")
 			ramLines(j)(i)
 		}
-
-		
+    
+    def hexToInt(c: Char) = { Integer.parseInt(c.toString(), 16) }
+		    
 		def renderState(inst: Array[Boolean], adr: Array[Boolean]) = {
 			val sb = new StringBuilder()
-			val printerOutput = getPrinterOutput()
-			val switchIndex = new Map(String, Int)()
+			setPrinterOutput()
+			val switchIndex: Map[Char,Int] = Map()
 			
-			for (line <- DRAWING.lines()) {
+			for (line <- DRAWING.getLines()) {
 				val processedLine = insertActualValues(line, switchIndex)
 				sb.append(processedLine)			
 			}
+    }
 		
-		
+		/* EX
 			val ramLines = ram.getStr.split("\n")
-			val pcInt = getInt(pc)
+					val pcInt = getInt(pc)
 			
 			// RAM and OUTPUT
 			for (i <- 0 to RAM_SIZE-1) {
@@ -225,15 +240,17 @@ object Comp {
 			println("Reg " + getString(reg) +" "+ getInt(reg))
 			println("Ins "+getString(inst)+getString(adr)+" "+ getInstructionName(inst)+" "+ getInt(adr))
 		}
+     
+    */
+      
 	}
 	
-
 	
 	/*
 	 * UTILS:
 	 */
 	def readRamFromFile(filename: String): Array[Array[Boolean]] = {
-    	val source = Source.fromURL(getClass.getResource(filename))
+    val source = Source.fromURL(getClass.getResource(filename))
 				
 		var data = new Array[Array[Boolean]](RAM_SIZE) //(RAM_SIZE, 8)
 		var i = 0
