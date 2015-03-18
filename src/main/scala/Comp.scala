@@ -7,10 +7,12 @@ object Comp {
 	val TEST_FILE = "data/fibbBin"
 	val DRAWING_FILE = "data/asciiDrawingOfComputer"
 	
-	val DRAWING = Source.fromURL(getClass.getResource(DRAWING_FILE))
+	val DRAWING = scala.io.Source.fromFile(DRAWING_FILE, "UTF-8").mkString
 
 	val DEBUG = true
-	
+	val AUTO = true
+  val FQ = 300
+  
 	val RAM_SIZE = 15
 
   //only class can have undefined values, so I defined them, although they are reset in main.
@@ -52,7 +54,7 @@ object Comp {
 			if (getInt(adr) != RAM_SIZE)
 				state(getInt(adr)) = data
 			else {
-				val outputLine = getString(data) + " " + getInt(data) + "\n"
+				val outputLine = getString(data) + " " + "%3d".format(getInt(data)) + "\n"
 				output = output + outputLine
 				if (!DEBUG) {
 					println(outputLine)
@@ -65,6 +67,7 @@ object Comp {
 	class Proc {
 		var reg = Array( false, false, false, false, false, false, false, false )
 		var pc = Array( false, false, false, false )
+    var cycle = 0
     
     var printerOutput = ""
 	
@@ -106,8 +109,6 @@ object Comp {
 	
 		def exec() {
 			if (getInt(pc) >= RAM_SIZE) {
-			  if (DEBUG)
-			    print("QUIT")
 			  exit(0)
 			}
 			val tmp = ram.get(pc)
@@ -115,8 +116,12 @@ object Comp {
 			val adr = getSecondNibble(tmp)
 			if (DEBUG) {
 				val out = renderState(inst, adr)
-				println(out)
-				readLine()
+				print(out)
+        if (AUTO && cycle != 0) {
+          Thread sleep FQ 
+        } else {
+				  readLine()
+        }
 			}
 			getInt(inst) match {
 				case 0 => read(adr)
@@ -128,120 +133,94 @@ object Comp {
 				case 6 => jumpIf(adr)
 				case 7 => jumpIfSmaller(adr)
 			}
+      cycle = cycle + 1
 			exec()
 		}		
+		
+    // FANCY OUTPUT:
     
-		def getStr() = {
-		  "Reg: " + getString(reg) + " Pc: " + getString(pc)
-		}
-		
-		// TODO
-		def setPrinterOutput() = {
-      /*
-			var outputLines = output.split("\n")
-			if (outputLines.length > RAM_SIZE)
-				outputLines = outputLines.drop(RAM_SIZE - outputLines.length)
-      printerOutput = outputLines.toString()
-      */
-      printerOutput = "bla bla"
-      
-		}
-		
-		def insertActualValues(line: String, switchIndex: Map[Char,Int]) = {
+		def renderState(inst: Array[Boolean], adr: Array[Boolean]): String = {
 			val sb = new StringBuilder()
-			for (c <- line) {
+			setPrinterOutput()
+			val switchIndex: Map[Char,Int] = Map()
+			
+			for (line <- DRAWING.split('\n')) {
+				val processedLine = insertActualValues(line, switchIndex)
+				sb.append(processedLine+"\n")			
+			}
+      sb.toString()
+    }
+    
+    def setPrinterOutput() = {
+      var outputLines = output.split("\n").reverse
+      if (output.length <= 0) {
+        printerOutput = "|0|______________|0|"
+      } else {
+        outputLines = outputLines.map(line => "|0| "+line+" |0|")
+        outputLines = outputLines :+ "|0|______________|0|"
+        printerOutput = outputLines.mkString("")
+      }
+    }
+    
+    def insertActualValues(line: String, switchIndex: Map[Char,Int]): String = {
+      val sb = new StringBuilder()
+      for (c <- line) {
         val cOut = if ("[0-9a-z]".r.findAllIn(c.toString).length != 1) {
           c
         } else {
           getLightbulb(c, switchIndex)
         }
         sb.append(cOut)
-			}
-		}
-		
-		def getLightbulb(c: Char, switchIndex: Map[Char,Int]): Char = {
-			val i = if (switchIndex.contains(c)) {
-					val i = switchIndex.get(c).get
-					switchIndex.put(c, i+1)
-					i
-				} else {
-					switchIndex.put(c, 1)
-					0
-				}
-			
-      val patRam = "[0-9a-e]".r	
-			c.toString() match {
-				case "p" => getChar(pc(i)) // need to convert 
-				case "s" => getChar(getSecondNibble(ram.get(pc))(i))
-				case "r" => getChar(reg(i))
-				case "i" => getChar(getFirstNibble(ram.get(pc))(i))
-				case "o" => getOutput(i)
-				case patRam => getRam(c, i)
-			}
-		}
-		
-		//TODO
-		def getOutput(i: Int) = {
+      }
+      sb.toString
+    }
+    
+    def getLightbulb(c: Char, switchIndex: Map[Char,Int]): Char = {
+      val i = if (switchIndex.contains(c)) {
+          val i = switchIndex.get(c).get
+          switchIndex.put(c, i+1)
+          i
+        } else {
+          switchIndex.put(c, 1)
+          0
+        }
+      
+      val patRam = "[0-9a-e]".r 
+      c.toString() match {
+        case "p" => getChar(pcIsPointingToAddress(i))
+        case "s" => getChar(instructionIsPointingToAddress(i))
+        case "r" => getChar(reg(i))
+        case "i" => getChar(instructionHasId(i))
+        case "o" => getFormattedOutput(i)
+        case patRam => getRam(c, i)
+      }
+    }
+    
+    def pcIsPointingToAddress(addr: Int): Boolean = {
+      getInt(pc) == addr
+    }
+        
+    def instructionIsPointingToAddress(addr: Int): Boolean = {
+      getInt(getSecondNibble(ram.get(pc))) == addr
+    }
+    
+    def instructionHasId(id: Int): Boolean = {
+      getInt(getFirstNibble(ram.get(pc))) == id
+    }
+    
+    def getFormattedOutput(i: Int): Char = {
       if (printerOutput.length <= i)
         ' '
       else
         printerOutput.charAt(i)
-		}
-		
-		def getRam(c: Char, i: Int) = {
-			val j = hexToInt(c)
-			val ramLines = ram.getStr.split("\n")
-			ramLines(j)(i)
-		}
-    
-    def hexToInt(c: Char) = { Integer.parseInt(c.toString(), 16) }
-		    
-		def renderState(inst: Array[Boolean], adr: Array[Boolean]) = {
-			val sb = new StringBuilder()
-			setPrinterOutput()
-			val switchIndex: Map[Char,Int] = Map()
-			
-			for (line <- DRAWING.getLines()) {
-				val processedLine = insertActualValues(line, switchIndex)
-				sb.append(processedLine)			
-			}
     }
-		
-		/* EX
-			val ramLines = ram.getStr.split("\n")
-					val pcInt = getInt(pc)
-			
-			// RAM and OUTPUT
-			for (i <- 0 to RAM_SIZE-1) {
-				// arrow to what pc points to
-				if (pcInt == i) 
-					print(" -> ")
-				else
-					print("    ")
-				// byte of ram
-				print(ramLines(i))
-				// bytes address
-				print(" "+getString(getSecondNibble(getBool(i))))
-				//if (i < 10) 
-				//	print("  ")
-				//else
-				//	print(" ")
-				//print(i)
-				print(verSeparator)
-				if (i < outputLines.length)
-					print(outputLines(i))
-				println()
-			}
-			
-			//println("RAM: " + ram.getStr)
-
-			// CPU
-			println("CPU:")
-			println("Reg " + getString(reg) +" "+ getInt(reg))
-			println("Ins "+getString(inst)+getString(adr)+" "+ getInstructionName(inst)+" "+ getInt(adr))
-		}
-     
-    */
+    
+    def getRam(c: Char, i: Int): Char = {
+      val j = hexToInt(c)
+      val ramLines = ram.getStr.split("\n")
+      ramLines(j)(i)
+    }
+    
       
 	}
 	
@@ -332,6 +311,10 @@ object Comp {
 		}
 		out
 	}
+  
+  def getInt(str: String): Int = {
+    getInt(getBool(str))
+  }
 	
 	def getBool(numIn: Int): Array[Boolean] = {
 		if (numIn > 255) {
@@ -389,6 +372,9 @@ object Comp {
 	def getSecondNibble(b: Array[Boolean]): Array[Boolean] = {
 		Array( b(4), b(5), b(6), b(7) )
 	}
+  
+  
+  def hexToInt(c: Char): Int = { Integer.parseInt(c.toString(), 16) }
 	
 }
 
