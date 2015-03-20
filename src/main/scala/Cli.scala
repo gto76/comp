@@ -1,9 +1,7 @@
 import org.apache.commons.cli._
 
-/**
- * Created by minerva on 28.8.2014.
- */
 object Cli {
+  
   /*
    * GET COMMAND LINE
    */
@@ -18,7 +16,9 @@ object Cli {
   private def getOptions: Options = {
     val options = new Options()
     options.addOption("h", "help", false, "Print this message.")
-    //addOptionWithArg(options, 'f', "filename", "Specify filename containing initial state of the ram.")
+    options.addOption("w", "wait", false, "Wait for enter after every cycle.")
+    options.addOption("o", "only-output", false, "Only print output.")
+    addOptionWithArg(options, 's', "speed", "Specify the cycle speed in miliseconds. Default is "+Comp.fq)
     options
   }
 
@@ -29,6 +29,19 @@ object Cli {
     val option = OptionBuilder.create(shortName)
     options.addOption(option)
   }
+  
+  /*
+   * SET PARAMETERS 
+   */
+
+  // TODO explain the file input
+  def setParameters(cmd: org.apache.commons.cli.CommandLine): (Boolean, Boolean, Boolean, Int) = {
+    val help = cmd.hasOption("h")
+    val wait = cmd.hasOption("w")
+    val onlyOutput = cmd.hasOption("o")
+    val speed = if (cmd.hasOption("s")) cmd.getOptionValue("s").toInt else Comp.fq
+    (help, wait, onlyOutput, speed)
+  }
 
   /*
    * PRINT HELP
@@ -36,7 +49,8 @@ object Cli {
 
   def printHelp() {
     val formatter = new HelpFormatter()
-    formatter.printHelp("comp", Cli.getOptions)
+    formatter.printHelp("comp <file>", Cli.getOptions)
   }
 
 }
+

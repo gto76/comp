@@ -1,5 +1,5 @@
 import scala.io.Source
-import scala.collection.mutable.Map 
+import scala.collection.mutable.Map
 import sys.exit
 
 object Comp {
@@ -8,13 +8,14 @@ object Comp {
 	val DRAWING_FILE = "data/asciiDrawingOfComputer"
 	
 	val DRAWING = scala.io.Source.fromFile(DRAWING_FILE, "UTF-8").mkString
-
-	val DEBUG = true
-	val AUTO = true
-  val FQ = 300
+  val RAM_SIZE = 15
   
-	val RAM_SIZE = 15
+  val ROWS = 25
 
+	var debug = true
+	var auto = true
+  var fq = 300
+  
   //only class can have undefined values, so I defined them, although they are reset in main.
 	var ramValues = readRamFromFile(TEST_FILE)
 	var ram = new Ram(ramValues)
@@ -23,15 +24,22 @@ object Comp {
 	var output = ""
 	
 	def main(args: Array[String]): Unit = {
-		val cmd = Cli.getCommandLine(args)
-		val help = cmd.hasOption("h")
-		//val input = if (cmd.hasOption("f")) cmd.getOptionValue("f") else TEST_FILE 
-    // TODO: absolute filenames need different method
-		if (help) { Cli.printHelp; return }
-
+    val cmd = Cli.getCommandLine(args)
+    val  (help, wait, onlyOutput, speed) = Cli.setParameters(cmd)
+    if (help) { Cli.printHelp; return }
+    auto = !wait
+    debug = !onlyOutput
+    fq = speed
+    
 		val arguments = cmd.getArgs()
 		val file: String = if (arguments.length > 0) arguments(0) else TEST_FILE
 
+    val fileDoesntExist = !(new java.io.File(file).exists())
+    if (fileDoesntExist) {
+      println("Input file "+file+" doesn't exist.")
+      exit
+    }
+    
 		ramValues = readRamFromFile(file)
 		ram = new Ram(ramValues)
 		proc = new Proc()
@@ -56,8 +64,8 @@ object Comp {
 			else {
 				val outputLine = getString(data) + " " + "%3d".format(getInt(data)) + "\n"
 				output = output + outputLine
-				if (!DEBUG) {
-					println(outputLine)
+				if (!debug) {
+					print(outputLine)
 				}
 			}
 		}
@@ -114,12 +122,16 @@ object Comp {
 			val tmp = ram.get(pc)
 			val inst = getFirstNibble(tmp)
 			val adr = getSecondNibble(tmp)
-			if (DEBUG) {
-				val out = renderState(inst, adr)
+			if (debug) {
+				val out: String = renderState(inst, adr)
+        for (i <- out.split("\n").length to ROWS)
+          println()
 				print(out)
-        if (AUTO && cycle != 0) {
-          Thread sleep FQ 
+        if (auto && cycle != 0) {
+          Thread sleep fq 
         } else {
+          if (cycle == 0)
+            print("Press Enter to begin execution")
 				  readLine()
         }
 			}
@@ -148,6 +160,7 @@ object Comp {
 				val processedLine = insertActualValues(line, switchIndex)
 				sb.append(processedLine+"\n")			
 			}
+      sb.deleteCharAt(sb.size-1)
       sb.toString()
     }
     
@@ -220,12 +233,9 @@ object Comp {
       val ramLines = ram.getStr.split("\n")
       ramLines(j)(i)
     }
-    
-      
 	}
-	
-	
-	/*
+
+  /*
 	 * UTILS:
 	 */
 	def readRamFromFile(filename: String): Array[Array[Boolean]] = {
@@ -361,7 +371,6 @@ object Comp {
 			num = num % delitelj
 			j = j+1
 		}
-		//println("getBoolNib:: in: " + numIn + " out: " + getString(out))
 		out
 	}
 	
