@@ -1,4 +1,7 @@
 bin
-project
+project/target
+project/project
 target
 .cache
+.project
+.classpath
