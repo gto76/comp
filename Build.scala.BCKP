@@ -1,0 +1,15 @@
+
+import sbt._
+import Keys._
+
+object Build extends Build {
+  lazy val root = Project(id = "root", base = file(".")).settings(
+    name := "comp",
+    version := "0.9.0",
+    scalaVersion := "2.11.1"
+  ).
+  settings(assemblySettings: _*)
+  settings(mainClass in assembly := Some("Comp"))
+}
+
+//lazy val root = (project in file(".")).settings(
