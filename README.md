@@ -1,10 +1,24 @@
-comp
+Comp
 ====
 
 Simple 4 bit virtual computer with assembler.
 
+![screenshot](doc/screenshot.png)
+
 How to run
 ----------
+
+### UNIX
+```bash
+sudo apt-get install sbt=0.13.5
+git clone https://github.com/gto76/comp.git
+cd comp
+sbt assembly
+java -jar target/scala-2.11/comp-assembly-0.9.0.jar
+```
+
+### Windows
+* Download and install [sbt 0.13.5](http://sourceforge.net/projects/gnuwin32/files/wget/1.11.4-1/wget-1.11.4-1-setup.exe/download)
 
 
 
