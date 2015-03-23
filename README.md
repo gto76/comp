@@ -1,7 +1,7 @@
 Comp
 ====
 
-Simple 4 bit virtual computer with assembler.
+Simple 4-bit virtual computer with assembler.
 
 ![screenshot](doc/screenshot.png)
 
@@ -30,10 +30,23 @@ sbt assembly
 java -jar target/scala-2.11/comp-assembly-0.9.0.jar
 ```
 
+Man
+---
+
+```
+usage: comp [OPTION]... [FILE]
+ -a,--assemble      Instead of execution it assembles the passed assembly
+                    file.
+ -h,--help          Print this message.
+ -o,--only-output   Only print output.
+ -s,--speed <arg>   Cycle speed in miliseconds. Default is 300
+ -w,--wait          Wait for enter after every cycle.
+```
+
 Fibberochi numbers example
 --------------------------
 
-### Assembly code:
+### Assembly code
 ```
 READ v2
 ADD v1
@@ -47,7 +60,7 @@ SMALLER a1
 JUMP a15
 ```
 
-### Assembly code with variables changed to absolute adresses:
+### Assembly code with variables changed to absolute adresses
 ```
 READ a14 
 ADD a13
@@ -63,7 +76,7 @@ JUMP a15
 
 All the data (values of the variables) has to be inserted in to binary manualy. Variables get adresses form the last adress backwards in order of aperance.
 
-### Binary:
+### Binary
 ```
 ----***-
 --*-**-*
@@ -89,19 +102,19 @@ Assembly
 All statements consit of istruction keyword and an address. 
 
 #### Instructions
-* READ 		---- copy value at the address to register
-* WRITE 	---* copy register to the adress
-* ADD		--*- add value at the address to the register
-* MINUS 	--** subtract value at the adress from the register 
-* JUMP 		-*-- go to adress
-* POINT 	-*-* copy value from the address that register is pointing to into register
-* BIGGER	-**- go to the address if register contains value, larger or equal to 127
-* SMALLER	-*** go to the address if register contains value, smaller then 127
+* READ 		`----` copy value at the address to register
+* WRITE 	`---*` copy register to the adress
+* ADD		`--*-` add value at the address to the register
+* MINUS 	`--**` subtract value at the adress from the register 
+* JUMP 		`-*--` go to adress
+* POINT 	`-*-*` copy value from the address that register is pointing to into register
+* BIGGER	`-**-` go to the address if register contains value, larger or equal to 127
+* SMALLER	`-***` go to the address if register contains value, smaller then 127
 
 #### Adresses are in three forms
-* a<number>  -  absolute address 
-* <number>   -  pointer to a value 
-* v<number>  -  a variable
+* `a<number>`  -  absolute address 
+* `<number>`   -  pointer to a value 
+* `v<number>`  -  a variable
 The actual computer only acepts absolute adresses. Other two options are managed by the asembler. The variables get at the end of the memory.
 
 
