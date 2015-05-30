@@ -5,8 +5,8 @@ Simple 4-bit virtual computer with assembler.
 
 ![screenshot](doc/screenshot.png)
 
-How to run
-----------
+How to run on…
+--------------
 
 ### Windows
 
@@ -30,8 +30,8 @@ sbt assembly
 java -jar target/scala-2.11/comp-assembly-0.9.0.jar
 ```
 
-Man
----
+Help
+----
 
 ```
 usage: comp [OPTION]... [FILE]
