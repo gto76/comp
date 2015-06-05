@@ -43,8 +43,8 @@ usage: comp [OPTION]... [FILE]
  -w,--wait          Wait for enter after every cycle.
 ```
 
-Fibberochi numbers example
---------------------------
+Fibonacci numbers example
+-------------------------
 
 ### Assembly code
 ```
@@ -60,7 +60,7 @@ SMALLER a1
 JUMP a15
 ```
 
-### Assembly code with variables changed to absolute adresses
+### Assembly code with variables changed to absolute addresses
 ```
 READ a14 
 ADD a13
@@ -111,7 +111,7 @@ All statements consit of istruction keyword and an address.
 * BIGGER	`-**-` go to the address if register contains value, larger or equal to 127
 * SMALLER	`-***` go to the address if register contains value, smaller then 127
 
-#### Adresses are in three forms
+#### Addresses are in three forms
 * `a<number>`  -  absolute address 
 * `<number>`   -  pointer to a value 
 * `v<number>`  -  a variable
