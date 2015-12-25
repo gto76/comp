@@ -1,7 +1,7 @@
 Comp
 ====
 
-Simple 4-bit virtual computer with assembler
+#### Simple 4-bit virtual computer with assembler
 
 ![screenshot](doc/screenshot.png)
 
