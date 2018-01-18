@@ -14,7 +14,7 @@ How to run on…
 2. Download and extract project's [ZIP](https://github.com/gto76/comp/archive/master.zip)
 3. Open command prompt, go to extracted project and execute these commands:
 
->```
+```
 setx PATH "%PATH%;C:\Program Files (x86)\sbt\bin"
 sbt assembly
 java -jar target/scala-2.11/wolfram-cells-assembly-0.9.0.jar 
